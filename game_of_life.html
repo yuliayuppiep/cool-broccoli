@@ -1,0 +1,97 @@
+<!DOCTYPE html> 
+<html> 
+<body>
+    <h1>HTML5 Canvas - GAME OF LIFE</h1>
+
+    <canvas id="myCanvas" width="400px" height="400px" style="border:1px solid black;">
+        Sorry, your browser does not support canvas.
+    </canvas>
+
+<script>
+const canvas = document.getElementById("myCanvas"); //Получение элемента <canvas> по его идентификатору "myCanvas" и сохранение ссылки на него в переменную canvas
+const ctx = canvas.getContext("2d"); //Получение контекста рисования (2D) для элемента <canvas> и сохранение его в переменную ctx
+ctx.fillStyle = "red"; //Установка цвета заливки для контекста рисования в красный
+
+let cellSize = 20; //размер ячейки (клеток) на ировом поле
+let fieldSize = 20; //размер поля (20 на 20)
+
+let curField = new Array(fieldSize); //текущее состояние поля
+let nextField = new Array(fieldSize); //следующее состояние поля
+let canvasRect = canvas.getBoundingClientRect();
+
+for (let i = 0; i < fieldSize; i++) { //создание вложенного массива
+    nextField[i] = new Array(fieldSize);
+    curField[i] = new Array(fieldSize);
+}
+
+function init() { //инициализация начального состояния игрового поля
+    canvas.addEventListener("click", function(event) { // добавляем обработчик события "click" к canvas
+        let x = Math.floor((event.clientX - canvasRect.left) / cellSize); // получаем координату x клетки, по которой кликнули
+        let y = Math.floor((event.clientY - canvasRect.top) / cellSize); // получаем координату y клетки, по которой кликнули
+        curField[y][x] = 1; // устанавливаем состояние клетки, по которой кликнули, как живую
+        draw(); //раскрашиваем
+    });
+}
+init();
+    
+function neighborCount(r, c) { //подсчитывает количество живых соседей у определенной клетки с координатами (r, c)
+    let sum = 0; //общее количество живых соседей
+    for (let i = -1; i <=1 ; i++)
+        for (let j = -1; j <= 1; j++)
+            sum += curField[(r + i + fieldSize) % fieldSize][(c + j + fieldSize) % fieldSize];
+            //Увеличение суммы на значение клетки позиции (r + i, c + j) с учетом обработки граничных условий периодических границ
+    sum-=curField[r][c] //Вычитание значения текущей клетки (r, c) из общей суммы, чтобы не учитывать ее в общем количестве соседей
+    return sum; //Возврат общего количества живых соседей для клетки (r, c).
+}
+
+
+function makeStep() { //выполнение одного шага игры 
+    for (let i = 0; i < fieldSize; i++){
+        for (let j = 0; j < fieldSize; j++) {
+            let nbs = neighborCount(i, j); //Вызов функции neighborCount(i, j) для получения количества живых соседей клетки (i, j)
+            if (((curField[i][j] == 0) && (nbs == 3)) || ((curField[i][j] == 1) && ((nbs == 2) || (nbs == 3)))){
+            //если клетка была мертва и 3 соседа ИЛИ
+            //ИЛИ была жива и у нее 2 или 3 соседа
+                nextField[i][j] = 1; //клетка становится живой или продолжает жить
+            }
+            else {
+                nextField[i][j] = 0; //клетка становится мертвой в остальных случаях
+            }
+
+        }
+    }
+    for (let i = 0; i < fieldSize; i++){ //Клетки, которые не удовлетворяют первым трем правилам, 
+        for (let j = 0; j < fieldSize; j++){
+            curField[i][j] = nextField[i][j]; //остаются в своем текущем состоянии на следующем шаге
+        }
+    }
+}
+
+
+function draw() {
+    for (let i = 0; i < fieldSize; i++){
+        for (let j = 0; j < fieldSize; j++){
+            if (curField[i][j] == 0) //если клетка мертвая
+                ctx.fillStyle = "orange"; //мертвые красятся оранжевым
+            else
+                ctx.fillStyle = "aqua"; //живые красятся в голубой
+            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize); //Отрисовка прямоугольника на холсте (<canvas>) по координатам (j * cellSize, i * cellSize). Размер прямоугольника задается cellSize по ширине и высоте
+        }
+    }
+}
+init(); //инициализирует начальное состояние игрового поля.
+draw(); //отрисовывает текущее состояние игрового поля.
+
+function go() { //для выполнения шага в игре и отрисовки нового состояния поля
+    makeStep(); //выполнение одного шага изменения состояния клеток на игровом поле
+    draw(); //отобразить новое состояние после выполнения шага.
+}
+init(); //Повторный вызов функции init() для повторной инициализации игрового поля
+draw(); //Повторный вызов функции draw() для отображения начального состояния игрового поля
+makeStep(); //Вызов функции makeStep() для выполнения начального шага изменения состояния клеток.
+
+let tm = setInterval(go, 2500); //Установка интервала, который будет вызывать функцию go() каждую 10000 милисек, что запускает автоматическое обновление состояния игры.
+
+</script>
+</body>
+</html>
